@@ -10,3 +10,5 @@ wandb/
 fast_reid/datasets/MOT17-ReID
 */__pycache__
 *.so
+data/
+pretrained/

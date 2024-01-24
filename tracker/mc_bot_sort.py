@@ -28,6 +28,7 @@ class STrack(BaseTrack):
 
         self.score = score
         self.tracklet_len = 0
+        self.total_tracklet_len = 0
 
         self.smooth_feat = None
         self.curr_feat = None
@@ -125,6 +126,7 @@ class STrack(BaseTrack):
         if new_track.curr_feat is not None:
             self.update_features(new_track.curr_feat)
         self.tracklet_len = 0
+        self.total_tracklet_len += 1
         self.state = TrackState.Tracked
         self.is_activated = True
         self.frame_id = frame_id
@@ -144,6 +146,7 @@ class STrack(BaseTrack):
         """
         self.frame_id = frame_id
         self.tracklet_len += 1
+        self.total_tracklet_len += 1
 
         new_tlwh = new_track.tlwh
 
@@ -235,6 +238,7 @@ class BoTSORT(object):
 
         self.frame_id = 0
         self.args = args
+        self.player_num = 7
 
         self.track_high_thresh = args.track_high_thresh
         self.track_low_thresh = args.track_low_thresh
@@ -414,13 +418,14 @@ class BoTSORT(object):
             removed_stracks.append(track)
 
         """ Step 4: Init new stracks"""
-        for inew in u_detection:
-            track = detections[inew]
-            if track.score < self.new_track_thresh:
-                continue
-
-            track.activate(self.kalman_filter, self.frame_id)
-            activated_starcks.append(track)
+        if len(strack_pool) < self.player_num:
+            for inew in u_detection:
+                track = detections[inew]
+                if track.score < self.new_track_thresh:
+                    continue
+                
+                track.activate(self.kalman_filter, self.frame_id)
+                activated_starcks.append(track)
 
         """ Step 5: Update state"""
         for track in self.lost_stracks:
